@@ -1,0 +1,25 @@
+<% if ( Object.keys(items).length > 0) { %>
+    <table class="table table-shopping">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Title</th>
+            <th scope="col">Artist</th>
+            <th scope="col">Top genre</th>
+            <th scope="col">Year</th>
+        </tr>
+        </thead>
+        <tbody>
+        <%  let index = 0;
+            for ( const item of items ) { %>
+            <tr>
+                <th scope="row"><%= item.idx %></th>
+                <td><%= item.title %></td>
+                <td><%= item.artist %></td>                
+                <td><%= item['top genre'] %></td>
+                <td><%= item.year %></td>
+            </tr>
+            <% } %>
+        </tbody>
+    </table>
+<% } %>

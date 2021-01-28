@@ -1,14 +1,16 @@
 const db = require('./elasticSearch');
 
+const TITLE = 'Top Spotify songs from 2010-2019 - by year';
+
 const getAllItems = async (req, res, next) => {
     console.log('Get all items...');
 
     try {
       const result = await db.getAllItems();
       // return res.json(result);
-      return res.render("shopping/main", {
+      return res.render("main", {
         items: result,
-        pageTitle: "Shopping list",
+        pageTitle: TITLE,
         errorMsg: null 
       });
     } catch (err) {
@@ -22,15 +24,16 @@ const getAllItems = async (req, res, next) => {
 const filterList = async (req, res, next) => {
   console.log('Filter list...');
 
-  const item = req.body.item.trim();
-  console.log('Filter by item <', item, '>');
+  const info = req.body.info.trim();
+  const year = req.body.year.trim();
+  console.log('Filter by info <', info, '> and year ', year);
 
   try {
-    const result = await db.filterItems(item);
+    const result = await db.filterItems(info, year);
     // return res.json(result);
-    return res.render("shopping/main", {
+    return res.render("main", {
       items: result,
-      pageTitle: "Shopping list",
+      pageTitle: TITLE,
       errorMsg: null 
     });
   } catch (err) {

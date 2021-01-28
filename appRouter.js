@@ -5,9 +5,8 @@ const router = express.Router();
 
 //get all items from list
 router.get('/', controller.getAllItems);
-// router.get('/shopping', controller.getShopppingList);
 
 //filter list
-router.post('/shopping', controller.filterList);
+router.post('/', controller.filterList);
 
 module.exports = router;

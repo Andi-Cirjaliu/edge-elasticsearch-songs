@@ -5,6 +5,7 @@ const csvtojson = require("csvtojson");
 const parseOptions = {
   // delimiter: ';',
   // includeColumns: /Country|Continent|Rank|Title|Artists/,
+  includeColumns: /idx|title|artist|top genre|year/,
   trim: true,
   // checkType: true,
 }

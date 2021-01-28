@@ -81,9 +81,9 @@ const getAllItems = async () => {
           match_all: {},
         },
       },
-      sort : "Continent:asc",
-      // sort : ["Continent:asc", "Country:asc", "Rank: ask"],
-      size: 100
+      // sort : "year:asc",
+      sort : ["year:asc", "idx:asc"],
+      size: 1000
     }
   );
 
@@ -93,46 +93,86 @@ const getAllItems = async () => {
     // console.log(hit);
     return { ...hit._source, id: hit._id};
   });
-  console.log("all items:", allValues);
+  // console.log("all items:", allValues);
+  console.log("all items:", allValues.length);
 
   return allValues;
 };
 
-const filterItems = async (item) => {
-  console.log("filter items by '", item, "'");
+const filterItems = async (info, year) => {
+  console.log("filter items by info '", info, "' and year ", year);
 
-  const { body } = await client.search(
-    {
-      index: INDEX,
-      body: {
-        query: {
-          match: {
-            itemName: item
-          }
+  let qBody = {
+    query: {
+      bool: {},
+    },
+  };
+
+  if (info) {
+    qBody.query.bool.should = [
+      {
+        match: {
+          artist: info,
         },
       },
-      // sort : "itemName:asc",
-      // size: 100
-    }
-  );
+      {
+        match: {
+          title: info,
+        },
+      },
+      {
+        match: {
+          "top genre": info,
+        },
+      },
+      // {
+      //   multi_match: {
+      //     query: info,
+      //     fields: ["artist", "title", "top genre"],
+      //   },
+      // },
+    ];
 
-  console.log(" all items found: ", body);
+    qBody.query.bool.minimum_should_match= 1;
+  }
+
+  if (year) {
+    qBody.query.bool.filter = {
+      match: {
+        year: year,
+      },
+    };
+  }
+
+  // console.log('query body:', qBody);
+  // console.log('query body bool:', qBody.query.bool);
+  console.log('query body bool should:', qBody.query.bool.should);
+  console.log('query body bool filter:', qBody.query.bool.filter);
+
+  const { body } = await client.search({
+    index: INDEX,
+    body: qBody,
+    // sort : "year:asc",
+    sort: ["year:asc", "idx:asc"],
+    size: 1000,
+  });
+
+  // console.log(" all items found: ", body);
 
   const allValues = body.hits.hits.map((hit) => {
     // console.log(hit);
-    return {
-      id: hit._id,
-      itemName: hit._source.itemName,
-      itemQty: hit._source.itemQty,
-    };
+    return { ...hit._source, id: hit._id};
   });
-  console.log("all items:", allValues);
+  // console.log("all items:", allValues);
+  console.log("filtered items:", allValues.length);
 
   return allValues;
 };
 
-const existsItem = async ({Country, Continent, Rank}) => {
-  // console.log("check if item for country ", Country, ', continent ', Continent, ', rank ', Rank, " exists.");
+
+const existsItem = async (item) => {
+  const {idx, year} = item;
+  // console.log("check if item ", idx, ', year ', year, " exists.");
 
   const { body } = await client.search({
     index: INDEX,
@@ -140,11 +180,10 @@ const existsItem = async ({Country, Continent, Rank}) => {
       query: {
         bool: {
           must: [
-            { match: { Country: Country } },
-            { match: { Continent :  Continent}},
-            // { match: { Rank :  Rank}}
+            { match: { year: year } },
+            { match: { idx: idx } },
           ],
-          filter: [{ match: { Rank: Rank } }],
+          // filter: [{ match: { idx: idx } }],
         },
       },
     },
@@ -154,13 +193,13 @@ const existsItem = async ({Country, Continent, Rank}) => {
   // console.log(" all items found: ", body.hits.hits);
 
   const found = body.hits.total.value > 0 || body.hits.hits.length > 0;
-  console.log("item for country ", Country, ', continent ', Continent, ', rank ', Rank, " exists: ", found);
+  // console.log("item ", idx, ', year ', year, " exists: ", found);
 
   return found;
 };
 
 const addItem = async (item) => {
-  console.log("add item ", item);
+  // console.log("add item ", item);
 
   const {body} = await client.index({
     index: INDEX,
@@ -169,7 +208,7 @@ const addItem = async (item) => {
   });
 
   // console.log(body);
-  console.log('new item: ', body._id);
+  // console.log('new item: ', body._id);
 
 };
 
@@ -177,7 +216,9 @@ const addItem = async (item) => {
 const initDB = async () => {
   console.log("Init DB....");
 
-  const defaultItems = await csv.parseCSVFile(path.join(__dirname, "SpotifyTopSongsByCountry - May 2020 copy.csv"));
+  const defaultItems = await csv.parseCSVFile(
+    path.join(__dirname, "data", "top10s.csv")
+  );
 
   if (!defaultItems || defaultItems.length === 0) {
     console.log("No items to initialize database!");
@@ -188,6 +229,11 @@ const initDB = async () => {
   try {
     await client.indices.create({
       index: INDEX,
+      body: {
+        mappings: {
+          numeric_detection: true,
+        },
+      },
     });
   } catch (err) {
     console.log("failed to create the index. error: ", err);
@@ -205,32 +251,6 @@ const initDB = async () => {
   } catch (err) {
     console.error("An error occured while initialize elastic search db: ", err);
   }
-
-    //update meta
-    try {
-      await client.indices.putMapping({
-        index: INDEX,
-        body: {
-          properties: {
-            Continent: {
-              type: "text",
-              fielddata: true,
-            },
-            Country: {
-              type: "text",
-              fielddata: true,
-            },
-            // Rank: {
-            //   type: "short",
-            //   // fielddata: true,
-            //   index: true
-            // },
-          },
-        },
-      });
-    } catch (err) {
-      console.log("failed to update the index. error: ", err);
-    }
 
   db_init = true;
 };
@@ -256,90 +276,9 @@ module.exports = {
 // deleteItem('ur5MAXcBwiC_gzya_OML');
 // deleteItem(1);
 // existsItem('apples');
-initDB();
+// initDB();
 // filterItems('ana');
 // filterItems('ba');
 // filterItems('*ba*');
 // filterItems('ba*');
 
-async function run () {
-  //  //delete index
-  //  try {
-  //   await client.indices.delete({
-  //     index: 'game-of-thrones',
-  //   });
-  // } catch (err) {
-  //   console.log("failed to delete the index. error: ", err);
-  // }
-
-  // // Let's start by indexing some data
-  // await client.index({
-  //   index: 'game-of-thrones',
-  //   body: {
-  //     character: 'Ned Stark',
-  //     quote: 'Winter is coming.'
-  //   }
-  // })
-
-  // await client.index({
-  //   index: 'game-of-thrones',
-  //   body: {
-  //     character: 'Daenerys Targaryen',
-  //     quote: 'I am the blood of the dragon.'
-  //   }
-  // })
-
-  // await client.index({
-  //   index: 'game-of-thrones',
-  //   // here we are forcing an index refresh,
-  //   // otherwise we will not get any result
-  //   // in the consequent search
-  //   refresh: true,
-  //   body: {
-  //     character: 'Tyrion Lannister',
-  //     quote: 'A mind needs books like a sword needs a whetstone.'
-  //   }
-  // })
-
-  // Let's search!
-  // const { body } = await client.search({
-  //   index: 'game-of-thrones',
-  //   body: {
-  //     query: {
-  //       match: {
-  //         quote: 'bloo'
-  //         // character: 'Tyri'
-  //       }
-  //     }
-  //   }
-  // })
-
-  const { body } = await client.search({
-    index: 'game-of-thrones',
-    body: {
-      query: {
-        "bool" : {
-          "should": [
-            { "term": { "quote": "blood" }}
-          ]
-        }
-      }
-    }
-  })
-
-  
-  console.log(body.hits.total.value);
-  console.log(body.hits.hits);
-
-  // const { body } = await client.sql.query({
-  //   body: {
-  //     query: "SELECT * FROM \"game-of-thrones\" WHERE quote LIKE '%blo%'"
-  //   }
-  // })
-
-  // console.log(body.columns);
-  // console.log(body.rows);
-
-}
-
-// run().catch(console.log)
