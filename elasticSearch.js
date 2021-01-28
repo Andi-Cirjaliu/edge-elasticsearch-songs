@@ -112,17 +112,29 @@ const filterItems = async (info, year) => {
     qBody.query.bool.should = [
       {
         match: {
-          artist: info,
+          artist: {
+            query: info,
+            operator: 'OR'
+          }
+          // artist: info,
         },
       },
       {
         match: {
-          title: info,
+          title: {
+            query: info,
+            operator: 'AND'
+          }
+          // title: info,
         },
       },
       {
         match: {
-          "top genre": info,
+          "top genre": {
+            query: info,
+            operator: 'OR'
+          }
+          // "top genre": info,
         },
       },
       // {
@@ -152,6 +164,7 @@ const filterItems = async (info, year) => {
   const { body } = await client.search({
     index: INDEX,
     body: qBody,
+    // default_operator: 'OR',
     // sort : "year:asc",
     sort: ["year:asc", "idx:asc"],
     size: 1000,
