@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: shopping-elastic-app-deployment
+  name: songs-elastic-app-deployment
 spec:
   selector:
     matchLabels:
-      component: shopping-elastic-app
+      component: songs-elastic-app
   template:
     metadata:
       labels:
-        component: shopping-elastic-app
+        component: songs-elastic-app
     spec:
       containers:
-      - name: shopping-elastic-app
-        image: shopping-elastic-app-deployment:1.0
+      - name: songs-elastic-app
+        image: songs-elastic-app-deployment:1.0
         resources:
           limits:
             memory: "128Mi"
@@ -38,6 +38,7 @@ spec:
             value: elastic
           - name: DB_PASSWORD
             # value: elastic1234
+            # Use: kubectl create secret generic elasticsearch-es-elastic-user --from-literal elastic=password123
             valueFrom:
                 secretKeyRef:
                   name: elasticsearch-es-elastic-user
