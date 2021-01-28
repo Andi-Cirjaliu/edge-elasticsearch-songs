@@ -112,11 +112,11 @@ const filterItems = async (info, year) => {
     qBody.query.bool.should = [
       {
         match: {
-          artist: {
-            query: info,
-            operator: 'OR'
-          }
-          // artist: info,
+          // artist: {
+          //   query: info,
+          //   operator: 'OR'
+          // }
+          artist: info,
         },
       },
       {
@@ -130,11 +130,11 @@ const filterItems = async (info, year) => {
       },
       {
         match: {
-          "top genre": {
-            query: info,
-            operator: 'OR'
-          }
-          // "top genre": info,
+          // "top genre": {
+          //   query: info,
+          //   operator: 'OR'
+          // }
+          "top genre": info,
         },
       },
       // {
