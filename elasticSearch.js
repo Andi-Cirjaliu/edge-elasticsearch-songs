@@ -177,8 +177,7 @@ const addItem = async (item) => {
 const initDB = async () => {
   console.log("Init DB....");
 
-  // const defaultItems = await csv.parseCSVFile(path.join(__dirname, "SpotifyTopSongsByCountry - May 2020 copy.csv"));
-  const defaultItems = await csv.parseCSVFile(path.join(__dirname, "top10s.csv"));
+  const defaultItems = await csv.parseCSVFile(path.join(__dirname, "SpotifyTopSongsByCountry - May 2020 copy.csv"));
 
   if (!defaultItems || defaultItems.length === 0) {
     console.log("No items to initialize database!");
@@ -208,30 +207,30 @@ const initDB = async () => {
   }
 
     //update meta
-    // try {
-    //   await client.indices.putMapping({
-    //     index: INDEX,
-    //     body: {
-    //       properties: {
-    //         Continent: {
-    //           type: "text",
-    //           fielddata: true,
-    //         },
-    //         Country: {
-    //           type: "text",
-    //           fielddata: true,
-    //         },
-    //         // Rank: {
-    //         //   type: "short",
-    //         //   // fielddata: true,
-    //         //   index: true
-    //         // },
-    //       },
-    //     },
-    //   });
-    // } catch (err) {
-    //   console.log("failed to update the index. error: ", err);
-    // }
+    try {
+      await client.indices.putMapping({
+        index: INDEX,
+        body: {
+          properties: {
+            Continent: {
+              type: "text",
+              fielddata: true,
+            },
+            Country: {
+              type: "text",
+              fielddata: true,
+            },
+            // Rank: {
+            //   type: "short",
+            //   // fielddata: true,
+            //   index: true
+            // },
+          },
+        },
+      });
+    } catch (err) {
+      console.log("failed to update the index. error: ", err);
+    }
 
   db_init = true;
 };
