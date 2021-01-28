@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopping-elastic-app-deployment
+spec:
+  selector:
+    matchLabels:
+      component: shopping-elastic-app
+  template:
+    metadata:
+      labels:
+        component: shopping-elastic-app
+    spec:
+      containers:
+      - name: shopping-elastic-app
+        image: shopping-elastic-app-deployment:1.0
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 3000
+        env:
+          - name: NODE_ENV
+            value: production
+          - name: PORT
+            value: '3000'
+          - name: DB_HOST
+            # This is when elastic search is deployed on a production cluster in the 'operators' namespace
+            value: https://elasticsearch-es-http.operators.svc.cluster.local:9200
+            # This is when elastic search is deployed using the config files in the 'operators' namespace
+            # value: http://elastic-search-service.operators.svc.cluster.local:9200
+            # This is when elastic search is deployed using the config files in the same namespace
+            # value: http://elastic-search-service:9200
+          - name: DB_SECURE
+            value: 'true'
+          - name: DB_USER
+            value: elastic
+          - name: DB_PASSWORD
+            # value: elastic1234
+            valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-es-elastic-user
+                  key: elastic
+          - name: DB_USE_SSL
+            value: 'true'
+          # Set this environment variable only if DB_USE_SSL is true
+          - name: DB_SSL_CERT
+            valueFrom: 
+                secretKeyRef:
+                  name: elasticsearch-es-http-ca-internal
+                  key: tls.crt
