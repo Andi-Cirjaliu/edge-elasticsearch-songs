@@ -4,6 +4,7 @@ const csv = require('./csv_json');
 const path = require("path");
 
 const INDEX = 'spotify_top';
+const RECREATE_INDEX = false;
 
 const host = process.env.DB_HOST || 'http://localhost:9200';
 const secure = process.env.DB_SECURE || false;
@@ -206,7 +207,7 @@ const existsItem = async (item) => {
   // console.log(" all items found: ", body.hits.hits);
 
   const found = body.hits.total.value > 0 || body.hits.hits.length > 0;
-  // console.log("item ", idx, ', year ', year, " exists: ", found);
+  console.log("item ", idx, ', year ', year, " exists: ", found);
 
   return found;
 };
@@ -236,6 +237,17 @@ const initDB = async () => {
   if (!defaultItems || defaultItems.length === 0) {
     console.log("No items to initialize database!");
     return;
+  }
+
+  //create index
+  if ( RECREATE_INDEX === true ) {
+    try {
+      await client.indices.delete({
+        index: INDEX
+      });
+    } catch (err) {
+      console.log("failed to delete the index. error: ", err);
+    }
   }
 
   //create index
