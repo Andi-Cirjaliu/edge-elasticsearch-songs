@@ -4,7 +4,7 @@ metadata:
   name: elasticsearch-example
 build:
   artifacts:
-  - image: shopping-elastic-app-deployment
+  - image: songs-elastic-app-deployment
     context: ./
     sync:
       manual:
