@@ -4,7 +4,7 @@ const csv = require('./csv_json');
 const path = require("path");
 
 const INDEX = 'spotify_top';
-const RECREATE_INDEX = true;
+const RECREATE_INDEX = false;
 
 const host = process.env.DB_HOST || 'http://localhost:9200';
 const secure = process.env.DB_SECURE || false;
