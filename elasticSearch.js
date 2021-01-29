@@ -1,5 +1,4 @@
 const { Client } = require('@elastic/elasticsearch')
-// const defaultItems = require('./default_shopping_items');
 const csv = require('./csv_json');
 const path = require("path");
 
@@ -113,10 +112,6 @@ const filterItems = async (info, year) => {
     qBody.query.bool.should = [
       {
         match: {
-          // artist: {
-          //   query: info,
-          //   operator: 'OR'
-          // }
           artist: info,
         },
       },
@@ -126,24 +121,13 @@ const filterItems = async (info, year) => {
             query: info,
             operator: 'AND'
           }
-          // title: info,
         },
       },
       {
         match: {
-          // "top genre": {
-          //   query: info,
-          //   operator: 'OR'
-          // }
           "top genre": info,
         },
       },
-      // {
-      //   multi_match: {
-      //     query: info,
-      //     fields: ["artist", "title", "top genre"],
-      //   },
-      // },
     ];
 
     qBody.query.bool.minimum_should_match= 1;
@@ -165,7 +149,6 @@ const filterItems = async (info, year) => {
   const { body } = await client.search({
     index: INDEX,
     body: qBody,
-    // default_operator: 'OR',
     // sort : "year:asc",
     sort: ["year:asc", "idx:asc"],
     size: 1000,
